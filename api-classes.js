@@ -19,10 +19,6 @@ class StoryList {
    *  - returns the StoryList instance.*
    */
 
-	// TODO: Note the presence of `static` keyword: this indicates that getStories
-	// is **not** an instance method. Rather, it is a method that is called on the
-	// class directly. Why doesn't it make sense for getStories to be an instance method?
-
 	static async getStories() {
 		// query the /stories endpoint (no auth required)
 		const response = await axios.get(`${BASE_URL}/stories`);
@@ -44,15 +40,19 @@ class StoryList {
    */
 
 	async addStory(user, newStory) {
-		const response = await axios.post(`${BASE_URL}/stories`, {
-			token : user.loginToken,
-			story : newStory
-		});
+		const response = await axios
+			.post(`${BASE_URL}/stories`, {
+				token : user.loginToken,
+				story : newStory
+			})
+			.catch((err) => console.log(err));
 		return response;
 	}
 
 	async deleteStory(user, storyId) {
-		const deleted = await axios.delete(`${BASE_URL}/stories/${storyId}`, { params: { token: user.loginToken } });
+		const deleted = await axios
+			.delete(`${BASE_URL}/stories/${storyId}`, { params: { token: user.loginToken } })
+			.catch((err) => console.log(err));
 		return deleted;
 	}
 }
@@ -85,13 +85,15 @@ class User {
    */
 
 	static async create(username, password, name) {
-		const response = await axios.post(`${BASE_URL}/signup`, {
-			user : {
-				username,
-				password,
-				name
-			}
-		});
+		const response = await axios
+			.post(`${BASE_URL}/signup`, {
+				user : {
+					username,
+					password,
+					name
+				}
+			})
+			.catch((err) => console.log(err));
 
 		// build a new User instance from the API response
 		const newUser = new User(response.data.user);
@@ -109,12 +111,14 @@ class User {
    */
 
 	static async login(username, password) {
-		const response = await axios.post(`${BASE_URL}/login`, {
-			user : {
-				username,
-				password
-			}
-		});
+		const response = await axios
+			.post(`${BASE_URL}/login`, {
+				user : {
+					username,
+					password
+				}
+			})
+			.catch((err) => console.log(err));
 
 		// build a new User instance from the API response
 		const existingUser = new User(response.data.user);
@@ -140,11 +144,13 @@ class User {
 		if (!token || !username) return null;
 
 		// call the API
-		const response = await axios.get(`${BASE_URL}/users/${username}`, {
-			params : {
-				token
-			}
-		});
+		const response = await axios
+			.get(`${BASE_URL}/users/${username}`, {
+				params : {
+					token
+				}
+			})
+			.catch((err) => console.log(err));
 
 		// instantiate the user from the API information
 		const existingUser = new User(response.data.user);
@@ -159,18 +165,22 @@ class User {
 	}
 
 	async favoriteStory(storyId) {
-		const favoritedStory = await axios.post(`${BASE_URL}/users/${this.username}/favorites/${storyId}`, {
-			token : this.loginToken
-		});
+		const favoritedStory = await axios
+			.post(`${BASE_URL}/users/${this.username}/favorites/${storyId}`, {
+				token : this.loginToken
+			})
+			.catch((err) => console.log(err));
 		return favoritedStory;
 	}
 
 	async unfavoriteStory(storyId) {
-		const unfavoritedStory = await axios.delete(`${BASE_URL}/users/${this.username}/favorites/${storyId}`, {
-			params : {
-				token : this.loginToken
-			}
-		});
+		const unfavoritedStory = await axios
+			.delete(`${BASE_URL}/users/${this.username}/favorites/${storyId}`, {
+				params : {
+					token : this.loginToken
+				}
+			})
+			.catch((err) => console.log(err));
 		return unfavoritedStory;
 	}
 }

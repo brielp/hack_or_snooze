@@ -123,7 +123,7 @@ $(async function() {
    * Event handler for favoriting a story
    */
 
-	$('body').on('click', '.fa-star', async function(e) {
+	$('body').on('click', '.fa-star', async function removeFavorites(e) {
 		if (!currentUser) return;
 
 		const storyId = e.target.parentElement.id;
@@ -143,10 +143,19 @@ $(async function() {
 		generateFavorites();
 	});
 
-	$('body').on('click', '.fa-trash', function(e) {
+	// click listener on trash icon
+
+	$('body').on('click', '.fa-trash', async function(e) {
 		const storyId = e.target.parentElement.id;
-		storyList.deleteStory(currentUser, storyId);
-		$(`#${storyId}`).remove();
+
+		const deleted = await storyList.deleteStory(currentUser, storyId);
+
+		// update global variable with new User
+		const token = localStorage.getItem('token');
+		const username = localStorage.getItem('username');
+		currentUser = await User.getLoggedInUser(token, username);
+
+		await generateFavorites();
 	});
 
 	/**
@@ -210,10 +219,10 @@ $(async function() {
 			$allStoriesList.append(result);
 		}
 
-		generateFavorites();
+		await generateFavorites();
 	}
 
-	function generateFavorites() {
+	async function generateFavorites() {
 		if (!currentUser) return;
 		$favoritedArticles.empty();
 
@@ -230,12 +239,14 @@ $(async function() {
 	function generateStoryHTML(story) {
 		let hostName = getHostName(story.url);
 		let iconClass = starFavorite(story);
-		let trashClass = isOwner(story);
+		let trashClass = isOwnerClass(story);
+		let hiddenClass = '';
+		if (currentUser === null) hiddenClass = 'hidden';
 
 		// render story markup
 		const storyMarkup = $(`
 	  <li id="${story.storyId}">
-	  	<i class="${iconClass}" id="icon-${story.storyId}"></i>
+	  	<i class="${iconClass} ${hiddenClass} stars" id="icon-${story.storyId}"></i>
         <a class="article-link" href="${story.url}" target="a_blank">
           <strong>${story.title}</strong>
         </a>
@@ -270,6 +281,8 @@ $(async function() {
 		$newStory.show();
 		$navFavorites.show();
 		$navWelcome.text(`Welcome, ${currentUser.name}!`).show();
+		$('.stars').show();
+		$('#user-profile').show();
 		$('#profile-name').text(`Name: ${currentUser.name}`);
 		$('#profile-username').text(`Username: ${currentUser.username}`);
 		const date = new Date(currentUser.createdAt);
@@ -303,7 +316,7 @@ $(async function() {
 		return 'far fa-star';
 	}
 
-	function isOwner(story) {
+	function isOwnerClass(story) {
 		if (currentUser) {
 			if (story.username === currentUser.username) {
 				return 'fas fa-trash';
